@@ -1,0 +1,14 @@
+{
+  "name": "eleicoes-2026-ultimate",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Mapa das Eleições 2026 com resultados oficiais do TSE, consulta por turno e tema escuro.",
+  "type": "module",
+  "scripts": {
+    "start": "node server.mjs",
+    "dev": "node --watch server.mjs",
+    "test": "node --test"
+  },
+  "engines": { "node": ">=24" },
+  "license": "UNLICENSED"
+}
