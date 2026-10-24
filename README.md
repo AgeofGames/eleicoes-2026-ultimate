@@ -2,6 +2,8 @@
 
 Site independente para acompanhar a eleição presidencial de 2026, com mapa por estado, comparação dos candidatos, resultados oficiais do TSE, consulta ao primeiro turno e tema escuro.
 
+Endereço público: [Eleições 2026 Ultimate](https://eleicoes-2026-ultimate-production.up.railway.app). Repositório: [AgeofGames/eleicoes-2026-ultimate](https://github.com/AgeofGames/eleicoes-2026-ultimate).
+
 ## Rodar e verificar
 
 Instale Node.js 24 ou superior. O projeto usa apenas módulos nativos: não é necessário instalar pacotes.
@@ -23,11 +25,12 @@ Uma falha da fonte oficial não é substituída por dados antigos no servidor. O
 
 ## Publicar no GitHub e Railway
 
-1. Envie este diretório ao repositório previsto [AgeofGames/eleicoes-2026-ultimate](https://github.com/AgeofGames/eleicoes-2026-ultimate). Não envie credenciais nem arquivos `.env`.
-2. No Railway, crie um serviço conectado a esse repositório. O `railway.json` seleciona o `Dockerfile` e usa `/health` para verificar a aplicação.
-3. Em **Settings → Networking**, gere um domínio público para o serviço. O servidor usa `RAILWAY_PUBLIC_DOMAIN` automaticamente para os endereços canônicos e o sitemap.
-4. Se configurar domínio próprio, defina `SITE_URL` como a origem HTTPS completa, por exemplo `https://eleicoes2026.seudominio.com.br`, sem caminho nem parâmetros. `SITE_URL` tem prioridade sobre o domínio Railway. Faça um novo deploy após alterar a variável.
-5. Verifique a página inicial, `/primeiro-turno`, `/health`, `/robots.txt` e `/sitemap.xml` no domínio publicado.
+1. Envie este diretório ao repositório [AgeofGames/eleicoes-2026-ultimate](https://github.com/AgeofGames/eleicoes-2026-ultimate). Não envie credenciais nem arquivos `.env`.
+2. No Railway, crie um serviço conectado a esse repositório. O `Dockerfile` na raiz é detectado automaticamente; confirme essa seleção na configuração de build. O `railway.json` fica como referência legada: serviços novos não devem depender da aplicação automática desse arquivo.
+3. Nas configurações de deploy do serviço, defina manualmente o **Healthcheck Path** como `/health`.
+4. Em **Settings → Networking**, gere um domínio público. Recomenda-se definir explicitamente `SITE_URL` nas variáveis do serviço como a origem HTTPS completa. Neste site, o valor é `https://eleicoes-2026-ultimate-production.up.railway.app`. Use apenas a origem, sem caminho nem parâmetros. Se `SITE_URL` não estiver definida, o servidor tenta usar `RAILWAY_PUBLIC_DOMAIN`.
+5. Se configurar domínio próprio, atualize `SITE_URL` para ele, por exemplo `https://eleicoes2026.seudominio.com.br`. Faça um novo deploy após alterar a variável ou as configurações do serviço.
+6. Aguarde a confirmação do deploy e verifique a página inicial, `/primeiro-turno`, `/health`, `/robots.txt` e `/sitemap.xml` no domínio publicado.
 
 O contêiner usa um usuário sem privilégios e não exige volume, banco de dados ou chave de API. O cache é temporário e reinicia a cada deploy. No ambiente local, o site envia `noindex` e bloqueia rastreamento. Com uma origem pública HTTPS configurada, as duas páginas permitem indexação.
 
@@ -44,6 +47,7 @@ Após validar a propriedade, envie `https://SEU-DOMINIO/sitemap.xml` na seção 
 - `public/`: interface, mapa, estilos, scripts e imagens.
 - `server.mjs`: páginas, arquivos públicos, SEO e acesso validado ao TSE.
 - `server.test.mjs` e `frontend.test.mjs`: testes com fonte oficial simulada; não dependem de disponibilidade da rede.
-- `Dockerfile` e `railway.json`: configuração de publicação.
+- `Dockerfile`: imagem de publicação detectada pelo Railway.
+- `railway.json`: referência legada de configuração; defina o healthcheck e as variáveis também no painel do Railway.
 
 O projeto não é um serviço do TSE. Os resultados exibidos dependem da publicação e da disponibilidade da fonte oficial. Não há resultados simulados na interface de produção.
