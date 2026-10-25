@@ -39,7 +39,7 @@ test('validação rejeita arquivos de simulação, outro ano, turno, eleição, 
   for (const payload of [null, [], 'text']) assert.throws(() => validatePayload(payload, '2', 'br'));
 });
 
-test('páginas dos dois turnos têm canonical, textos SSR, JSON-LD válido e CSP compatível', async t => {
+test('páginas dos dois turnos têm canonical, prévia social, textos SSR, JSON-LD válido e CSP compatível', async t => {
   const request = await start(t);
   for (const [path, label, date, other] of [['/', 'Segundo turno', '25 de outubro de 2026', '/primeiro-turno'], ['/primeiro-turno', 'Primeiro turno', '4 de outubro de 2026', '/']]) {
     const response = await request(path);
@@ -47,6 +47,17 @@ test('páginas dos dois turnos têm canonical, textos SSR, JSON-LD válido e CSP
     const html = await response.text();
     assert.match(html, new RegExp(`<title>Eleições 2026 Ultimate \\| ${label}</title>`));
     assert.ok(html.includes(`href="https://eleicoes.example.com${path}"`));
+    const head = html.slice(0, html.indexOf('</head>'));
+    const imageUrl = 'https://eleicoes.example.com/social-preview-v1.jpg';
+    assert.ok(head.includes(`<meta property="og:image" content="${imageUrl}">`));
+    assert.ok(head.includes(`<meta property="og:image:secure_url" content="${imageUrl}">`));
+    assert.ok(head.includes('<meta property="og:image:type" content="image/jpeg">'));
+    assert.ok(head.includes('<meta property="og:image:width" content="1200">'));
+    assert.ok(head.includes('<meta property="og:image:height" content="628">'));
+    assert.match(head, /<meta property="og:image:alt" content="[^"]+">/);
+    assert.ok(head.includes('<meta name="twitter:card" content="summary_large_image">'));
+    assert.ok(head.includes(`<meta name="twitter:image" content="${imageUrl}">`));
+    assert.equal((head.match(/property="og:image"/g) || []).length, 1);
     assert.ok(html.includes(date));
     assert.ok(html.includes(`href="${other}"`));
     assert.doesNotMatch(html, /__[A-Z_]+__/);
@@ -56,6 +67,24 @@ test('páginas dos dois turnos têm canonical, textos SSR, JSON-LD válido e CSP
     const hash = createHash('sha256').update(json).digest('base64');
     assert.ok(response.headers.get('Content-Security-Policy').includes(`'sha256-${hash}'`));
   }
+});
+
+test('imagem de compartilhamento é JPEG público e leve, acessível por GET e HEAD sem JavaScript', async t => {
+  const request = await start(t);
+  const path = '/social-preview-v1.jpg';
+  const response = await request(path, { headers: { 'User-Agent': 'WhatsApp/2.0' } });
+  assert.equal(response.status, 200);
+  assert.equal(response.headers.get('Content-Type'), 'image/jpeg');
+  assert.equal(response.headers.get('X-Robots-Tag'), null);
+  const image = Buffer.from(await response.arrayBuffer());
+  assert.equal(image.readUInt16BE(0), 0xffd8);
+  assert.equal(image.readUInt16BE(image.length - 2), 0xffd9);
+  assert.ok(image.length > 0 && image.length < 600_000);
+  const head = await request(path, { method: 'HEAD' });
+  assert.equal(head.status, 200);
+  assert.equal(head.headers.get('Content-Type'), 'image/jpeg');
+  assert.equal(Number(head.headers.get('Content-Length')), image.length);
+  assert.equal((await head.arrayBuffer()).byteLength, 0);
 });
 
 test('robots e sitemap usam origem configurada; ambiente local não é indexável', async t => {
