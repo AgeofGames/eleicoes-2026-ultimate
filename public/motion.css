@@ -1,0 +1,227 @@
+/* Motion stays decorative: results and controls remain immediately usable. */
+:root {
+  --motion-ease: cubic-bezier(.22, 1, .36, 1);
+  --motion-quick: 180ms;
+  --motion-soft: 340ms;
+  --motion-shadow: 0 10px 28px #23364d10, 0 2px 6px #23364d06;
+  --motion-ring: 0 0 0 4px #245cbe14;
+}
+:root[data-theme="dark"] {
+  --motion-shadow: 0 12px 30px #00000026, 0 2px 6px #00000018;
+  --motion-ring: 0 0 0 4px #79a8ff20;
+}
+
+/* A restrained color dissolve keeps both themes coherent. */
+.motion-ready body,
+.motion-ready :is(.national, .card, .region-card, .state-card, .btn, .search,
+  .detail select, .live, .notice, .progress-band, .segments, .uf-chip,
+  .badge, .regions-badge, .track, .counted-track, .ad-panel, .brand-ultimate) {
+  transition: background-color var(--motion-soft) ease,
+    border-color var(--motion-soft) ease, color var(--motion-soft) ease,
+    box-shadow 260ms var(--motion-ease), transform 240ms var(--motion-ease);
+}
+.motion-ready :is(.red, .blue, .score, .region-value, .detail-row strong,
+  .region-progress-head strong, .state-counted strong, .subtitle strong,
+  .source-link, .data-link, .footer a, .theme-status) {
+  transition: color 300ms ease;
+}
+.motion-ready :is(.btn, .segments button, .state-card) {
+  -webkit-tap-highlight-color: transparent;
+}
+.motion-ready :is(.btn, .segments button) {
+  backface-visibility: hidden;
+}
+.motion-ready :is(.btn, .search, .detail select):focus-visible {
+  box-shadow: var(--motion-ring);
+  border-color: var(--blue);
+}
+.motion-ready :is(.search, .detail select) {
+  transition: border-color 200ms ease, box-shadow 240ms var(--motion-ease),
+    background-color var(--motion-soft) ease, color var(--motion-soft) ease;
+}
+.motion-ready :is(.search, .detail select):focus {
+  border-color: var(--blue);
+  box-shadow: var(--motion-ring);
+}
+
+/* One shared selection surface glides between comparison modes. */
+.segments.has-indicator {
+  position: relative;
+  isolation: isolate;
+}
+.segment-indicator {
+  position: absolute;
+  inset: 3px auto 3px 0;
+  z-index: 0;
+  border-radius: 7px;
+  background: var(--paper);
+  box-shadow: 0 2px 7px #18334d12, 0 0 0 1px #18334d04;
+  pointer-events: none;
+  transition: transform 420ms var(--motion-ease), width 420ms var(--motion-ease),
+    background-color var(--motion-soft) ease, box-shadow var(--motion-soft) ease;
+}
+.segments.has-indicator button {
+  position: relative;
+  z-index: 1;
+  transition: color 200ms ease, transform var(--motion-quick) var(--motion-ease);
+}
+.segments.has-indicator button[aria-pressed="true"] {
+  background: transparent;
+  box-shadow: none;
+}
+
+/* The map keeps its geographic geometry fixed while its state changes. */
+.motion-ready .state {
+  transition: fill 380ms ease, stroke 220ms ease, stroke-width 220ms ease;
+}
+.motion-ready .map-label .label-box {
+  transition: fill 320ms ease, stroke 220ms ease, stroke-width 220ms ease,
+    fill-opacity 220ms ease;
+}
+.motion-ready :is(.label-uf, .label-percent, .label-counted, .map-line) {
+  transition: fill 300ms ease, stroke 300ms ease;
+}
+.motion-ready .map-label.selected .label-box {
+  stroke: var(--blue);
+  stroke-width: 2.2;
+  fill-opacity: 1;
+}
+.motion-ready .state.selected {
+  stroke-width: 2.8;
+}
+.motion-ready .map-canvas {
+  transition: width 450ms var(--motion-ease);
+}
+.motion-ready .map-scroll {
+  scroll-behavior: smooth;
+}
+.motion-ready :is(.track div, .progress span, .counted-track div) {
+  transition: width 440ms var(--motion-ease), background-color 300ms ease;
+}
+
+/* Hover is limited to devices with an accurate pointer. */
+@media (hover: hover) and (pointer: fine) {
+  .motion-ready .btn:not(:disabled):hover {
+    transform: translateY(-2px);
+    border-color: var(--blue);
+    box-shadow: 0 5px 14px #23364d10;
+  }
+  .motion-ready .state-card:hover {
+    transform: translateY(-3px);
+    border-color: var(--blue);
+    box-shadow: var(--motion-shadow);
+  }
+  .motion-ready .region-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--motion-shadow);
+  }
+  .motion-ready .state-card[aria-pressed="true"]:hover {
+    box-shadow: 0 0 0 1px var(--blue), var(--motion-shadow);
+  }
+  .motion-ready :is(.source-link, .data-link, .footer a):hover {
+    color: var(--blue);
+    text-decoration-color: currentColor;
+  }
+  .motion-ready .segments button:not([aria-pressed="true"]):hover {
+    color: var(--ink);
+  }
+  .motion-ready .map-label:hover .label-box {
+    fill-opacity: 1;
+    stroke: var(--blue);
+  }
+}
+.motion-ready .btn:not(:disabled):active,
+.motion-ready .state-card:active {
+  transform: translateY(0) scale(.98);
+  transition-duration: 100ms;
+}
+.motion-ready .segments button:active {
+  transform: scale(.96);
+}
+.motion-ready .state-card[aria-pressed="true"] {
+  box-shadow: 0 0 0 1px var(--blue), 0 4px 16px #245cbe0b;
+}
+.state-card[hidden] {
+  display: none !important;
+}
+
+.motion-ready #refresh[data-loading="true"] svg {
+  animation: motion-refresh 900ms linear infinite;
+}
+.motion-ready #refresh[data-loading="true"] {
+  opacity: .8;
+}
+@keyframes motion-refresh {
+  to { transform: rotate(360deg); }
+}
+
+/* Disclosure keeps the native details/summary keyboard behavior. */
+.motion-ready .regions-method summary {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  list-style: none;
+  transition: color 180ms ease;
+}
+.motion-ready .regions-method summary::-webkit-details-marker {
+  display: none;
+}
+.motion-ready .regions-method summary::before {
+  content: "";
+  width: 5px;
+  height: 5px;
+  border-right: 1.5px solid currentColor;
+  border-bottom: 1.5px solid currentColor;
+  transform: rotate(-45deg);
+  transition: transform 240ms var(--motion-ease);
+  flex: 0 0 auto;
+}
+.motion-ready .regions-method[open] summary::before {
+  transform: rotate(45deg);
+}
+.motion-ready .regions-method[open] > p {
+  animation: motion-disclose 260ms var(--motion-ease) both;
+}
+@keyframes motion-disclose {
+  from { opacity: .25; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Supported browsers blend the two turn pages without delaying navigation. */
+@view-transition {
+  navigation: auto;
+}
+::view-transition-group(root) {
+  animation-duration: 220ms;
+}
+::view-transition-old(root) {
+  animation: motion-page-out 220ms ease both;
+}
+::view-transition-new(root) {
+  animation: motion-page-in 220ms ease both;
+}
+@keyframes motion-page-out {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+@keyframes motion-page-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  @view-transition {
+    navigation: none;
+  }
+  ::view-transition-group(root), ::view-transition-old(root), ::view-transition-new(root) {
+    animation: none !important;
+  }
+  *, *::before, *::after {
+    animation: none !important;
+    transition: none !important;
+    scroll-behavior: auto !important;
+  }
+  .motion-ready :is(.btn, .state-card, .region-card, .segments button):is(:hover, :active) {
+    transform: none;
+  }
+}

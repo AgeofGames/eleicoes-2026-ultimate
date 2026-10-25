@@ -60,8 +60,8 @@ function aggregateRegion(region,records){
 }
 function isStale(uf){const r=state.get(uf);return !!r&&(failed.has(uf)||Date.now()-r.checkedAt>120000);}
 function status(kind,message){el('connection').dataset.kind=kind;el('connection-text').textContent=message;}
-function notify(message){el('notice').hidden=!message;el('notice').textContent=message||'';}
-function text(id,s){el(id).textContent=s;}
+function notify(message){const node=el('notice'),changed=node.textContent!==(message||'');node.hidden=!message;node.textContent=message||'';if(changed&&message)window.electionMotion?.notice(node);}
+function text(id,s){const node=el(id);if(node.textContent===String(s))return;node.textContent=s;window.electionMotion?.metric(node);}
 function createSVG(tag,attrs,parent){const n=document.createElementNS('http://www.w3.org/2000/svg',tag);for(const[k,v]of Object.entries(attrs))n.setAttribute(k,v);parent.appendChild(n);return n;}
 function point(lon,lat){return[16+(lon+73.9833)*17,16+(5.2718-lat)*17];}
 function initMap(){
@@ -87,7 +87,7 @@ function initList(){
   const option=document.createElement('option');option.value=uf;option.textContent=name+' · '+uf.toUpperCase();el('state-select').appendChild(option);
   const card=document.createElement('button');card.type='button';card.className='state-card';card.id='card-'+uf;card.dataset.uf=uf;card.setAttribute('aria-pressed','false');
   card.innerHTML='<div class="state-card-top"><span class="state-name"></span><span class="uf-chip"></span></div><div class="state-pair"><div class="red"><span>LULA</span><strong id="list-lula-'+uf+'">—</strong></div><div class="blue"><span>FLÁVIO</span><strong id="list-flavio-'+uf+'">—</strong></div></div><div class="state-counted"><span>Urnas apuradas</span><strong id="list-counted-'+uf+'">—</strong></div><div class="counted-track" aria-hidden="true"><div id="counted-bar-'+uf+'"></div></div><div class="state-meta" id="meta-'+uf+'">Aguardando TSE</div>';
-  card.querySelector('.state-name').textContent=name;card.querySelector('.uf-chip').textContent=uf.toUpperCase();card.addEventListener('click',()=>{selectState(uf);el('detail-name').scrollIntoView({behavior:'smooth',block:'center'});});el('states-grid').appendChild(card);
+  card.querySelector('.state-name').textContent=name;card.querySelector('.uf-chip').textContent=uf.toUpperCase();card.addEventListener('click',()=>{selectState(uf);if(window.electionMotion)window.electionMotion.scrollTo(el('detail-name'));else el('detail-name').scrollIntoView({block:'center'});});el('states-grid').appendChild(card);
  }
 }
 function initRegions(){
@@ -115,7 +115,7 @@ function renderRegions(){
   else text('region-time-'+region.id,'Horários TSE: aguardando');
  }
 }
-function selectState(uf){if(!(uf in NAMES))return;selected=uf;el('state-select').value=uf;render();}
+function selectState(uf){if(!(uf in NAMES))return;const changed=selected!==uf;selected=uf;el('state-select').value=uf;render();if(changed)window.electionMotion?.select(uf);}
 function fillFor(uf){
  const r=state.get(uf);if(!r||isStale(uf))return 'url(#no-data)';
  if(r.pending)return 'var(--map-empty)';
@@ -169,7 +169,7 @@ async function refresh(){
  if(busy||document.hidden)return;
  if(cooldownUntil>Date.now()){schedule(cooldownUntil-Date.now());status('warn','Consulta temporariamente pausada');notify('O TSE limitou temporariamente as consultas. A próxima tentativa será automática.');tick();return;}
  if(!navigator.onLine){failed.clear();for(const k of state.keys())failed.add(k);hasRun=true;status('warn','Sem conexão');notify('Sem internet. Os números disponíveis são da última consulta. Reconecte para atualizar.');render();schedule(POLL);return;}
- busy=true;completed=0;clearTimeout(timer);el('refresh').disabled=true;status('busy','Consultando o TSE');notify('');
+ busy=true;completed=0;clearTimeout(timer);el('refresh').disabled=true;el('refresh').dataset.loading='true';el('refresh').setAttribute('aria-busy','true');status('busy','Consultando o TSE');notify('');
  const started=Date.now(),queue=['br',...UF.map(s=>s[0])].filter(uf=>(retryAfter.get(uf)||0)<=Date.now());let ok=0;
  try{
   for(let i=0;i<queue.length;i+=4){if(cooldownUntil>Date.now())break;const results=await Promise.all(queue.slice(i,i+4).map(fetchState));ok+=results.filter(Boolean).length;render();text('poll-status','Consultando o TSE · '+completed+'/'+queue.length);if(i+4<queue.length)await delay(300);}
@@ -181,7 +181,7 @@ async function refresh(){
   else if(state.get('br')?.pending){status('ok','Aguardando apuração');notify('O TSE ainda não iniciou a apuração do '+TURN+'º turno. Os percentuais aparecerão assim que os resultados oficiais forem divulgados.');}
   else{status('ok','Dados recebidos do TSE');notify('');}
  }finally{
-  busy=false;el('refresh').disabled=false;render();const wait=cooldownUntil>Date.now()?cooldownUntil-Date.now():Math.max(1000,(failures?Math.min(300000,POLL*2**Math.min(failures,4)):POLL)-(Date.now()-started));schedule(wait);tick();
+  busy=false;el('refresh').disabled=false;el('refresh').dataset.loading='false';el('refresh').setAttribute('aria-busy','false');render();const wait=cooldownUntil>Date.now()?cooldownUntil-Date.now():Math.max(1000,(failures?Math.min(300000,POLL*2**Math.min(failures,4)):POLL)-(Date.now()-started));schedule(wait);tick();
  }
 }
 function tick(){
@@ -200,7 +200,7 @@ el('state-select').addEventListener('change',e=>selectState(e.target.value));
 el('refresh').addEventListener('click',()=>{if(!busy&&Date.now()-lastChecked>5000)refresh();});
 for(const b of document.querySelectorAll('[data-mode]'))b.addEventListener('click',()=>{mode=b.dataset.mode;for(const c of document.querySelectorAll('[data-mode]'))c.setAttribute('aria-pressed',String(c===b));render();});
 el('zoom').addEventListener('click',()=>{const zoomed=el('map-canvas').classList.toggle('zoomed');el('zoom').setAttribute('aria-pressed',String(zoomed));text('zoom',zoomed?'Reduzir −':'Ampliar +');text('map-help',zoomed?'Arraste para explorar. Toque em uma UF para consultar.':'Toque em uma UF para ver os dois percentuais.');if(!zoomed){el('map-scroll').scrollLeft=0;el('map-scroll').scrollTop=0;}});
-el('search').addEventListener('input',e=>{const query=norm(e.target.value);let shown=0;for(const[uf,name]of UF){const visible=norm(name+' '+uf).includes(query);el('card-'+uf).hidden=!visible;if(visible)shown++;}el('no-match').hidden=shown>0;});
+el('search').addEventListener('input',e=>{const update=()=>{const query=norm(e.target.value);let shown=0;for(const[uf,name]of UF){const visible=norm(name+' '+uf).includes(query);el('card-'+uf).hidden=!visible;if(visible)shown++;}el('no-match').hidden=shown>0;};if(window.electionMotion)window.electionMotion.filter(el('states-grid'),update);else update();});
 document.addEventListener('visibilitychange',()=>{clearTimeout(timer);if(document.hidden){tick();return;}render();if(Date.now()-lastChecked>=POLL||!hasRun)refresh();else schedule(Math.max(1000,nextAt-Date.now()));});
 window.addEventListener('online',()=>{if(cooldownUntil<=Date.now())refresh();});
 window.addEventListener('offline',()=>{for(const k of state.keys())failed.add(k);status('warn','Sem conexão');notify('Sem internet. Os números exibidos são da última consulta disponível.');render();});
