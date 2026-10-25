@@ -32,7 +32,7 @@ Uma falha da fonte oficial não é substituída por dados antigos no servidor. O
 5. Se configurar domínio próprio, atualize `SITE_URL` para ele, por exemplo `https://eleicoes2026.seudominio.com.br`. Faça um novo deploy após alterar a variável ou as configurações do serviço.
 6. Aguarde a confirmação do deploy e verifique a página inicial, `/primeiro-turno`, `/health`, `/robots.txt` e `/sitemap.xml` no domínio publicado.
 
-O contêiner usa um usuário sem privilégios e não exige volume, banco de dados ou chave de API. O cache é temporário e reinicia a cada deploy. No ambiente local, o site envia `noindex` e bloqueia rastreamento. Com uma origem pública HTTPS configurada, as duas páginas permitem indexação.
+O servidor HTTP usa um usuário sem privilégios. O cache dos resultados é temporário e reinicia a cada deploy; o histórico de visitas usa SQLite no volume persistente descrito abaixo. No ambiente local, o site envia `noindex` e bloqueia rastreamento. Com uma origem pública HTTPS configurada, as duas páginas permitem indexação.
 
 ## Google e compartilhamento
 
@@ -59,3 +59,15 @@ A unidade NativeBanner_1 (ID 31908990) aparece abaixo do mapa nos dois turnos, i
 O conteúdo é servido em /publicidade, fora do sitemap e com noindex. O frame possui altura automática, acompanha o tema e mantém o CSP do painel principal sem scripts externos. Seu CSP próprio limita scripts ao arquivo da unidade e conexões ao provedor; imagens HTTPS podem vir dos domínios variáveis das campanhas. O sandbox do cabeçalho restringe navegação da página principal. allow-same-origin é necessário para os cookies do código do provedor, portanto o frame não oferece isolamento completo do DOM. Não foram habilitados Popunder, Social Bar, scripts adicionais nem unsafe-eval.
 
 Arquivos: public/ads.js conecta tamanho e tema; public/ad-frame.html, ad-frame.css e ad-frame.js apresentam a unidade. Para remover anúncios, remova o aside ad-panel e a inclusão de ads.js de public/index.html. Para trocar de unidade, atualize a URL, o identificador do container e a permissão específica no CSP de server.mjs.
+
+## Administração e visitas
+
+A área `/admin` não possui link nas páginas públicas e envia `noindex`. O endereço reservado não substitui a autenticação: somente uma sessão válida pode consultar `/api/admin/stats`.
+
+Configure `ADMIN_USERNAME` e `ADMIN_PASSWORD` nas variáveis privadas do Railway. O código não contém uma senha padrão. A autenticação usa scrypt, comparação de tempo constante, limite de tentativas e sessão de 12 horas em cookie HttpOnly/Secure/SameSite=Strict. As requisições de login, saída e registro de visita exigem a origem exata de `SITE_URL`. Alterar as credenciais invalida sessões anteriores.
+
+No Railway, mantenha o volume em `/data`, configure `ANALYTICS_DB_PATH=/data/analytics.sqlite` e `TRUST_PROXY=1` (somente atrás do proxy confiável do Railway). Use uma única réplica com esse volume. `start-container.mjs` prepara as permissões de `/data` e abandona privilégios de root antes de importar e iniciar o servidor HTTP. O banco, suas chaves de assinatura e as estatísticas permanecem no volume entre publicações. Não remova o volume para atualizar o site.
+
+Em desenvolvimento, `npm start` aceita as mesmas variáveis; o caminho padrão é `.data/analytics.sqlite`. Arquivos do banco são privados e estão excluídos do Git e do contexto Docker. Não publique arquivos `.env` nem o banco de dados.
+
+O contador começa na ativação: não recupera acessos anteriores. Registra somente uma visita por documento visível em `/` e `/primeiro-turno`. Uma nova abertura ou recarga aumenta visualizações; um cookie aleatório assinado identifica o mesmo navegador por até um ano. Visitantes únicos são estimativas por navegador, não uma identificação de pessoas. Robôs conhecidos, prévias de compartilhamento, assets, consultas automáticas ao TSE e páginas administrativas não entram. Não são armazenados IPs nem User-Agents individuais; o IP é usado somente em memória para limitar requisições. O painel reúne totais, hoje, últimos 7/30 dias, gráfico diário e visualizações por turno, no fuso de Brasília.

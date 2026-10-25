@@ -3,6 +3,7 @@ import { readFile, realpath, stat } from 'node:fs/promises';
 import { dirname, extname, isAbsolute, relative, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { createHash } from 'node:crypto';
+import { createAnalytics } from './analytics.mjs';
 
 const ROOT = dirname(fileURLToPath(import.meta.url));
 const UFS = new Set('br ac al ap am ba ce df es go ma mt ms mg pa pb pr pe pi rj rn rs ro rr sc sp se to'.split(' '));
@@ -52,6 +53,7 @@ class ResultError extends Error {
 export function createApp({ fetchImpl = globalThis.fetch, now = Date.now, env = process.env, publicDir = resolve(ROOT, 'public'), cacheMs = 25_000, timeoutMs = 10_000 } = {}) {
   const origin = siteOrigin(env);
   const indexable = origin.startsWith('https://') && !isLocal(new URL(origin).hostname);
+  const analytics = createAnalytics({ env, now, origin, publicDir, root: ROOT });
   const cache = new Map();
   const pending = new Map();
   const cooldowns = new Map();
@@ -134,12 +136,13 @@ export function createApp({ fetchImpl = globalThis.fetch, now = Date.now, env = 
     res.setHeader('Content-Security-Policy', baseCsp);
     if (indexable) res.setHeader('Strict-Transport-Security', 'max-age=31536000');
     if (!indexable) res.setHeader('X-Robots-Tag', 'noindex, nofollow');
-    if (!['GET', 'HEAD'].includes(req.method)) return send(req, res, 405, 'Método não permitido.', undefined, { Allow: 'GET, HEAD', 'X-Robots-Tag': 'noindex' });
     if (!req.url || req.url.length > 2048) return send(req, res, 400, 'Endereço inválido.');
     let url;
     try { url = new URL(req.url, 'http://internal.invalid'); }
     catch { return send(req, res, 400, 'Endereço inválido.'); }
     const path = url.pathname;
+    if (await analytics.handle(req, res, path)) return;
+    if (!['GET', 'HEAD'].includes(req.method)) return send(req, res, 405, 'Método não permitido.', undefined, { Allow: 'GET, HEAD', 'X-Robots-Tag': 'noindex' });
     if (path === '/publicidade') {
       const adCsp = "default-src 'none'; script-src 'self' https://bauval.org/21/3bbcbccd95faece0d4d6dae65a8d16a1; style-src 'self' 'unsafe-inline'; img-src https: data:; connect-src https://bauval.org; font-src 'self' data:; frame-src 'none'; object-src 'none'; base-uri 'none'; frame-ancestors 'self'; form-action 'none'; sandbox allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox";
       return send(req, res, 200, await readFile(resolve(publicDir, 'ad-frame.html'), 'utf8'), 'text/html; charset=utf-8', { 'Content-Security-Policy': adCsp, 'X-Frame-Options': 'SAMEORIGIN', 'X-Robots-Tag': 'noindex, nofollow' });
@@ -203,16 +206,18 @@ export function createApp({ fetchImpl = globalThis.fetch, now = Date.now, env = 
     }
   }
 
-  return createServer((req, res) => {
+  const server = createServer((req, res) => {
     handle(req, res).catch(error => {
       console.error('Falha ao atender requisição:', error.message);
       if (!res.headersSent) send(req, res, 500, 'Serviço temporariamente indisponível.', undefined, { 'X-Robots-Tag': 'noindex', 'Cache-Control': 'no-store' });
       else res.end();
     });
   });
+  server.on('close', () => analytics.close());
+  return server;
 }
 
-if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1])).href) {
+export function startServer() {
   const port = Number(process.env.PORT || 3000);
   if (!Number.isInteger(port) || port < 0 || port > 65535) throw new Error('PORT inválida.');
   const server = createApp();
@@ -221,4 +226,7 @@ if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1]
     server.close(() => process.exit(0));
     setTimeout(() => process.exit(1), 10_000).unref();
   });
+  return server;
 }
+
+if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1])).href) startServer();

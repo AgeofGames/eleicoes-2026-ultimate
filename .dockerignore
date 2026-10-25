@@ -9,3 +9,7 @@ tests
 *.test.mjs
 *.log
 README.md
+.data
+*.sqlite
+*.sqlite-shm
+*.sqlite-wal
