@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex,nofollow,noarchive">
+  <meta name="referrer" content="same-origin">
+  <meta name="theme-color" content="#101722">
+  <meta name="color-scheme" content="dark">
+  <title>Administração — Eleições 2026 Ultimate</title>
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <link rel="stylesheet" href="/admin.css?v=1">
+  <script src="/admin.js?v=1" defer></script>
+</head>
+<body>
+  <div class="admin-shell">
+    <header class="admin-mast">
+      <a class="brand" href="/" aria-label="Eleições 2026 Ultimate — abrir site"><span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span><span>ELEIÇÕES 2026 <b>ULTIMATE</b></span></a>
+      <span class="private-badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><rect x="5" y="10" width="14" height="11" rx="3"/><path d="M8 10V7a4 4 0 0 1 8 0v3m-4 5v2"/></svg>Área administrativa</span>
+    </header>
+
+    <main>
+      <div class="initial-status" id="initial-status" role="status"><span class="loading-dot" aria-hidden="true"></span>Verificando acesso…</div>
+
+      <section class="login-panel" id="login-panel" aria-labelledby="login-title" hidden>
+        <div class="login-heading"><span class="eyebrow">ACESSO RESTRITO</span><h1 id="login-title">Seu site,<br><span>em números.</span></h1><p>Entre para acompanhar as visitas ao Eleições 2026 Ultimate.</p></div>
+        <form id="login-form">
+          <label for="username">Usuário</label>
+          <input id="username" name="username" type="text" autocomplete="username" autocapitalize="none" spellcheck="false" maxlength="128" required>
+          <label for="password">Senha</label>
+          <div class="password-wrap"><input id="password" name="password" type="password" autocomplete="current-password" maxlength="256" required><button class="password-toggle" id="password-toggle" type="button" aria-label="Mostrar senha" aria-pressed="false">Mostrar</button></div>
+          <p id="login-message" class="message" role="alert" hidden></p>
+          <button class="button primary login-submit" id="login-submit" type="submit"><span>Entrar no painel</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M5 12h14m-6-6 6 6-6 6"/></svg></button>
+        </form>
+        <a class="back-link" href="/">← Voltar ao site</a>
+      </section>
+
+      <section id="dashboard" aria-labelledby="dashboard-title" hidden>
+        <div class="dashboard-intro">
+          <div><span class="eyebrow">VISÃO GERAL</span><h1 id="dashboard-title" tabindex="-1">Quem acompanha<br class="mobile-break"> o seu site.</h1><p>Visitantes e visualizações, em um só lugar.</p></div>
+          <div class="dashboard-actions"><button class="button" id="refresh-stats" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M20 7v5h-5M4 17v-5h5M19 11a7 7 0 0 0-12-4L4 10m1 3a7 7 0 0 0 12 4l3-3"/></svg><span>Atualizar</span></button><button class="button ghost" id="logout" type="button">Sair</button></div>
+        </div>
+        <div class="dashboard-meta"><span class="active-label"><i aria-hidden="true"></i>Contagem de visitas</span><span id="updated-at" role="status">Carregando dados…</span></div>
+        <p class="message" id="dashboard-message" role="alert" hidden></p>
+        <p class="empty-notice" id="empty-notice" hidden>A contagem já está ativa. As primeiras visitas aparecerão aqui.</p>
+
+        <div class="metrics" aria-label="Resumo de acessos">
+          <article class="metric metric-featured"><div class="metric-label">Visitantes únicos <span>Total</span></div><strong id="total-visitors">—</strong><p>Navegadores que acessaram o site</p></article>
+          <article class="metric"><div class="metric-label">Visualizações <span>Total</span></div><strong id="total-pageviews">—</strong><p>Aberturas das páginas dos turnos</p></article>
+          <article class="metric"><div class="metric-label">Visitantes únicos <span>Hoje</span></div><strong id="today-visitors">—</strong><p>Navegadores diferentes hoje</p></article>
+          <article class="metric"><div class="metric-label">Visualizações <span>Hoje</span></div><strong id="today-pageviews">—</strong><p>Páginas abertas hoje</p></article>
+        </div>
+
+        <div class="analytics-layout">
+          <section class="panel chart-panel" aria-labelledby="daily-title">
+            <div class="panel-heading"><div><h2 id="daily-title">O movimento, dia a dia.</h2><p>Últimos 30 dias, incluindo hoje</p></div><div class="chart-legend"><span><i class="visitor-color"></i>Visitantes</span><span><i class="view-color"></i>Visualizações</span></div></div>
+            <div class="chart-scroll"><div class="chart" id="daily-chart" role="list" aria-label="Visitantes e visualizações por dia"></div></div>
+            <p class="chart-note">Passe sobre as barras ou abra a tabela para ver os números.</p>
+            <details class="daily-details"><summary>Ver dados detalhados</summary><div class="table-scroll"><table><caption class="sr-only">Acessos diários nos últimos 30 dias</caption><thead><tr><th scope="col">Dia</th><th scope="col">Visitantes</th><th scope="col">Visualizações</th></tr></thead><tbody id="daily-table"></tbody></table></div></details>
+          </section>
+
+          <section class="panel period-panel" aria-labelledby="period-title"><div class="panel-heading"><div><h2 id="period-title">Por período</h2><p>Hoje e os dias anteriores</p></div></div><table class="period-table"><caption class="sr-only">Resumo de visitantes e visualizações por período</caption><thead><tr><th scope="col">Período</th><th scope="col">Visitantes</th><th scope="col">Visualizações</th></tr></thead><tbody><tr><th scope="row">Hoje</th><td id="period-today-visitors">—</td><td id="period-today-pageviews">—</td></tr><tr><th scope="row">7 dias</th><td id="period-week-visitors">—</td><td id="period-week-pageviews">—</td></tr><tr><th scope="row">30 dias</th><td id="period-month-visitors">—</td><td id="period-month-pageviews">—</td></tr></tbody></table><p class="period-note">Cada navegador conta uma vez no período, mesmo quando volta em dias diferentes.</p></section>
+        </div>
+
+        <section class="panel pages-panel" aria-labelledby="pages-title"><div class="panel-heading"><div><h2 id="pages-title">Visualizações por turno</h2><p>Desde o início da contagem</p></div></div><div class="page-metrics"><article class="page-metric"><div><h3>Segundo turno</h3><strong id="second-pageviews">—</strong></div><div class="page-track" aria-hidden="true"><span id="second-bar"></span></div></article><article class="page-metric first-turn"><div><h3>Primeiro turno</h3><strong id="first-pageviews">—</strong></div><div class="page-track" aria-hidden="true"><span id="first-bar"></span></div></article></div></section>
+
+        <aside class="counting-note" aria-labelledby="counting-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v6m0-10v1"/></svg><div><h2 id="counting-title">Como esta contagem funciona</h2><p>Visitantes únicos são uma estimativa por navegador, usando um identificador anônimo. Uma pessoa com outro aparelho ou com os cookies apagados pode contar novamente. Visualizações incluem novas aberturas e recarregamentos das páginas. A área administrativa e as consultas automáticas de resultados não entram na contagem; robôs conhecidos são filtrados.</p><p id="counting-start">A contagem começa na ativação deste painel. Não inclui acessos anteriores.</p></div></aside>
+      </section>
+    </main>
+    <footer class="admin-footer"><span>Eleições 2026 Ultimate</span><span>Painel independente · Horários de Brasília</span></footer>
+  </div>
+  <noscript>Ative o JavaScript para entrar no painel de visitas.</noscript>
+</body>
+</html>
