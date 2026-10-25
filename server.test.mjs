@@ -72,6 +72,31 @@ test('robots e sitemap usam origem configurada; ambiente local não é indexáve
   assert.equal(await (await local('/robots.txt')).text(), 'User-agent: *\nDisallow: /\n');
 });
 
+test('publicidade usa iframe isolado nos dois turnos sem liberar scripts externos no painel', async t => {
+  const request = await start(t);
+  for (const path of ['/', '/primeiro-turno']) {
+    const response = await request(path);
+    const html = await response.text();
+    assert.match(html, /title="Publicidade — Adsterra" sandbox="allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox"/);
+    assert.ok(html.indexOf('class="ad-panel"') > html.indexOf('class="layout"'));
+    assert.ok(html.indexOf('class="ad-panel"') < html.indexOf('class="states-panel"'));
+    assert.doesNotMatch(response.headers.get('Content-Security-Policy'), /bauval|unsafe-eval|script-src[^;]*https:/);
+  }
+  const response = await request('/publicidade');
+  const html = await response.text();
+  const csp = response.headers.get('Content-Security-Policy');
+  assert.equal(response.status, 200);
+  assert.equal(response.headers.get('X-Robots-Tag'), 'noindex, nofollow');
+  assert.equal(response.headers.get('X-Frame-Options'), 'SAMEORIGIN');
+  assert.match(csp, /sandbox allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox/);
+  assert.doesNotMatch(csp, /allow-top-navigation|unsafe-eval/);
+  assert.match(csp, /frame-ancestors 'self'/);
+  assert.match(html, /https:\/\/bauval\.org\/21\/3bbcbccd95faece0d4d6dae65a8d16a1/);
+  assert.match(html, /id="container-3bbcbccd95faece0d4d6dae65a8d16a1"/);
+  const sitemap = await (await request('/sitemap.xml')).text();
+  assert.doesNotMatch(sitemap, /publicidade/);
+});
+
 test('health, assets, HEAD, métodos, redirects e 404 verdadeiros', async t => {
   const request = await start(t);
   assert.deepEqual(await (await request('/health')).json(), { status: 'ok' });

@@ -140,6 +140,10 @@ export function createApp({ fetchImpl = globalThis.fetch, now = Date.now, env = 
     try { url = new URL(req.url, 'http://internal.invalid'); }
     catch { return send(req, res, 400, 'Endereço inválido.'); }
     const path = url.pathname;
+    if (path === '/publicidade') {
+      const adCsp = "default-src 'none'; script-src 'self' https://bauval.org/21/3bbcbccd95faece0d4d6dae65a8d16a1; style-src 'self' 'unsafe-inline'; img-src https: data:; connect-src https://bauval.org; font-src 'self' data:; frame-src 'none'; object-src 'none'; base-uri 'none'; frame-ancestors 'self'; form-action 'none'; sandbox allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox";
+      return send(req, res, 200, await readFile(resolve(publicDir, 'ad-frame.html'), 'utf8'), 'text/html; charset=utf-8', { 'Content-Security-Policy': adCsp, 'X-Frame-Options': 'SAMEORIGIN', 'X-Robots-Tag': 'noindex, nofollow' });
+    }
     if (path === '/health') return send(req, res, 200, '{"status":"ok"}', 'application/json; charset=utf-8', { 'X-Robots-Tag': 'noindex' });
     if (path === '/api/resultados') {
       const turn = url.searchParams.get('turno');

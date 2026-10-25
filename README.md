@@ -51,3 +51,11 @@ Após validar a propriedade, envie `https://SEU-DOMINIO/sitemap.xml` na seção 
 - `railway.json`: referência legada de configuração; defina o healthcheck e as variáveis também no painel do Railway.
 
 O projeto não é um serviço do TSE. Os resultados exibidos dependem da publicação e da disponibilidade da fonte oficial. Não há resultados simulados na interface de produção.
+
+## Publicidade Adsterra
+
+A unidade NativeBanner_1 (ID 31908990) aparece abaixo do mapa nos dois turnos, identificada como Publicidade. O código fornecido pela conta usa a chave pública 3bbcbccd95faece0d4d6dae65a8d16a1 no domínio bauval.org. As campanhas e a disponibilidade são controladas pela Adsterra.
+
+O conteúdo é servido em /publicidade, fora do sitemap e com noindex. O frame possui altura automática, acompanha o tema e mantém o CSP do painel principal sem scripts externos. Seu CSP próprio limita scripts ao arquivo da unidade e conexões ao provedor; imagens HTTPS podem vir dos domínios variáveis das campanhas. O sandbox do cabeçalho restringe navegação da página principal. allow-same-origin é necessário para os cookies do código do provedor, portanto o frame não oferece isolamento completo do DOM. Não foram habilitados Popunder, Social Bar, scripts adicionais nem unsafe-eval.
+
+Arquivos: public/ads.js conecta tamanho e tema; public/ad-frame.html, ad-frame.css e ad-frame.js apresentam a unidade. Para remover anúncios, remova o aside ad-panel e a inclusão de ads.js de public/index.html. Para trocar de unidade, atualize a URL, o identificador do container e a permissão específica no CSP de server.mjs.
