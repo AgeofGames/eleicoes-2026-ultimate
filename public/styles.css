@@ -40,3 +40,4 @@ h1 span{color:var(--muted)}.live[data-kind="ok"]{border-color:var(--line)}.live[
 .subtitle strong{color:var(--ink);font-weight:650}
 @media(max-width:700px){.mast{gap:13px;align-items:flex-start}.mast-actions{width:100%;gap:7px}.mast-actions .source-link{margin-left:auto}.brand{font-size:11px}.brand-ultimate{font-size:8px}.theme-status{display:none}.mast-actions .btn{min-height:38px}.map-foot{line-height:1.6}}
 @media(max-width:360px){.mast-actions .source-link{width:100%;margin:3px 0 0}.brand{font-size:10px}}
+.ad-panel{margin:26px 0;padding:16px 18px;border:1px solid var(--line);border-radius:var(--radius);background:var(--paper);min-width:0}.ad-label{margin:0 0 12px;color:var(--muted);font-size:10px;font-weight:650;letter-spacing:.12em;text-transform:uppercase;text-align:center}.native-ad{display:block;width:100%;height:280px;border:0;background:transparent}@media(max-width:700px){.ad-panel{padding:14px 12px}.native-ad{height:400px}}
